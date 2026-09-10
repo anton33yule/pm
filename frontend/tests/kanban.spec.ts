@@ -1,5 +1,14 @@
 import { expect, test } from "@playwright/test";
 
+// This suite runs against the bare `next dev` server (no backend), so fake a
+// logged-in session — auth against the real backend is covered separately by
+// tests-smoke/login.spec.ts.
+test.beforeEach(async ({ page }) => {
+  await page.route("**/api/me", (route) =>
+    route.fulfill({ json: { username: "user" } })
+  );
+});
+
 test("loads the kanban board", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Kanban Studio" })).toBeVisible();

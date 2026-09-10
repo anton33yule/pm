@@ -4,14 +4,17 @@ import { KanbanBoard } from "@/components/KanbanBoard";
 
 const getFirstColumn = () => screen.getAllByTestId(/column-/i)[0];
 
+const renderBoard = (onLogout: () => void = () => {}) =>
+  render(<KanbanBoard username="user" onLogout={onLogout} />);
+
 describe("KanbanBoard", () => {
   it("renders five columns", () => {
-    render(<KanbanBoard />);
+    renderBoard();
     expect(screen.getAllByTestId(/column-/i)).toHaveLength(5);
   });
 
   it("renames a column", async () => {
-    render(<KanbanBoard />);
+    renderBoard();
     const column = getFirstColumn();
     const input = within(column).getByLabelText("Column title");
     await userEvent.clear(input);
@@ -19,8 +22,15 @@ describe("KanbanBoard", () => {
     expect(input).toHaveValue("New Name");
   });
 
+  it("logs out", async () => {
+    const onLogout = vi.fn();
+    renderBoard(onLogout);
+    await userEvent.click(screen.getByRole("button", { name: /log out/i }));
+    expect(onLogout).toHaveBeenCalledOnce();
+  });
+
   it("adds and removes a card", async () => {
-    render(<KanbanBoard />);
+    renderBoard();
     const column = getFirstColumn();
     const addButton = within(column).getByRole("button", {
       name: /add a card/i,
@@ -42,5 +52,30 @@ describe("KanbanBoard", () => {
     await userEvent.click(deleteButton);
 
     expect(within(column).queryByText("New card")).not.toBeInTheDocument();
+  });
+
+  it("edits a card's title and details", async () => {
+    renderBoard();
+    const column = getFirstColumn();
+
+    const editButton = within(column).getByRole("button", {
+      name: /edit align roadmap themes/i,
+    });
+    await userEvent.click(editButton);
+
+    const card = within(column).getByTestId("card-card-1");
+
+    const titleInput = within(card).getByLabelText("Card title");
+    await userEvent.clear(titleInput);
+    await userEvent.type(titleInput, "Renamed card");
+
+    const detailsInput = within(card).getByLabelText("Card details");
+    await userEvent.clear(detailsInput);
+    await userEvent.type(detailsInput, "New details");
+
+    await userEvent.click(within(card).getByRole("button", { name: /save/i }));
+
+    expect(within(column).getByText("Renamed card")).toBeInTheDocument();
+    expect(within(column).getByText("New details")).toBeInTheDocument();
   });
 });
