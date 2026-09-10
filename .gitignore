@@ -174,3 +174,7 @@ cython_debug/
 
 .DS_Store
 
+# Project: local SQLite data directory (bind-mounted into the container)
+/data/
+
+

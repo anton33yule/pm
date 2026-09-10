@@ -166,3 +166,12 @@ export const createId = (prefix: string) => {
   const timePart = Date.now().toString(36);
   return `${prefix}-${randomPart}${timePart}`;
 };
+
+export const updateCard = (
+  cards: Record<string, Card>,
+  cardId: string,
+  updates: Partial<Pick<Card, "title" | "details">>
+): Record<string, Card> => ({
+  ...cards,
+  [cardId]: { ...cards[cardId], ...updates },
+});
